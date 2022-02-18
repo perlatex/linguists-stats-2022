@@ -1,0 +1,261 @@
+---
+title: "advance dplyr"
+subtitle: "企鹅的故事"
+author: "王小二"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    theme: flatly
+    highlight: pygments
+    code_download: true
+    toc: true
+    toc_float: true
+    number_sections: true
+    df_print: paged
+---
+
+
+
+
+# 作业1
+
+```{r message = FALSE, warning = FALSE}
+library(tidyverse)
+
+penguins <- read_csv("./demo_data/penguins.csv") 
+penguins
+```
+
+
+1. 好身材的比例，男宝宝多还是女宝宝多？(提示，先假定一个好身材的标准，比如体重body_mass_g 低于 4500，就是好身材，那么，让新建的变量`goodfit`为1，否则为0；然后按照性别分组，统计每组里1的个数占总数的比例)
+```{r}
+penguins %>% 
+  mutate(
+    goodfit = if_else(body_mass_g < 4500, 1, 0)
+  ) %>% 
+  group_by(sex) %>% 
+  summarise(
+    prop = sum(goodfit) / n()
+  )
+```
+
+2. 不同岛屿女企鹅嘴峰长度的均值？
+```{r}
+penguins %>% 
+  filter(sex == "female") %>% 
+  group_by(island) %>% 
+  summarise(
+    mean = mean(bill_length_mm) 
+  )
+```
+
+3. 每种类型企鹅，各种体征属性的均值？
+```{r}
+penguins %>% 
+  group_by(species) %>% 
+  summarise(
+    across(contains("_"), mean, na.rm = TRUE)
+  )
+
+penguins %>% 
+  group_by(species) %>% 
+  summarise(
+    across(where(is.numeric) & !year, mean, na.rm = TRUE)
+  )
+```
+
+4. 各种体征属性的标准化（提示，标准化函数如下）
+```{r}
+std <- function(x) {
+   (x - mean(x)) / sd(x)
+}
+
+penguins %>% 
+  mutate(
+    across(contains("_"), std)
+  )
+```
+
+
+
+
+# 作业2
+
+```{r message = FALSE, warning = FALSE}
+library(tidyverse)
+library(gapminder)  # install.packages("gapminder")
+gapminder
+```
+
+
+这是一份关于人均寿命与人均GDP的统计数据，变量含义：
+
+- country      国家( 142 个国家)  
+- continent    所在洲(五大洲)
+- year         年份(1952 - 2007, 每5年)
+- lifeExp      人均寿命
+- pop          人口数量
+- gdpPercap    人均国民生产总值
+
+
+
+
+1. 找出2007年的数据
+```{r}
+gapminder %>% filter(year == 2007)
+```
+
+2. 找出1952年的数据，并保存
+```{r}
+gapminder_1952 <- gapminder %>%
+  filter(year == 1952)
+
+gapminder_1952
+```
+
+3. 找出亚洲的记录
+```{r}
+gapminder %>% filter(continent == 'Asia')
+```
+
+
+4. 找出2007年美国的记录
+```{r}
+gapminder %>% filter(year == 2007, country == 'United States')
+```
+
+5. 找出2002年中国和泰国记录
+```{r}
+gapminder %>%
+  filter(country %in% c("China", "Thailand"), year == 2002)
+```
+
+6. 按照gdpPercap降序排列
+```{r}
+gapminder %>% arrange(desc(gdpPercap))
+```
+
+7. 找出1992年的数据，然后按照人均寿命升序排序
+
+```{r}
+gapminder %>%
+  filter(year == 1992) %>%
+  arrange(lifeExp)
+```
+
+
+8. 1992年欧洲哪个国家人口最多？
+```{r}
+gapminder %>%
+  filter(year == 1992, continent == 'Europe') %>%
+  arrange(desc(pop)) %>% 
+  slice(1)
+```
+
+9. 1962年美洲哪个国家人均寿命最短?
+```{r}
+gapminder %>%
+  filter(year == 1962, continent == 'Americas') %>%
+  arrange(lifeExp) %>% 
+  slice(1)
+```
+
+10. 人口数量换算成以百万单位
+```{r}
+gapminder %>%
+  mutate(pop = pop / 1000000)
+```
+
+
+11. 计算国民生产总值
+```{r}
+gapminder %>% 
+  mutate(gdp = pop * gdpPercap)
+```
+
+12. 计算人均GDP和人均寿命的对数
+```{r}
+gapminder %>% 
+  mutate(
+    gdpPercap_log = log(gdpPercap),
+      lifeExp_log = log(lifeExp)
+  )
+```
+
+13. 统计每个洲的人均寿命
+```{r}
+gapminder %>%
+  group_by(continent) %>%
+  summarise(lifeExp = mean(lifeExp))
+```
+
+
+14. 统计1957年每个洲的人均寿命的中位数和人均GDP的最大值
+```{r}
+gapminder %>%
+  filter(year == 1957) %>%
+  group_by(continent) %>%
+  summarize(
+    medianLifeExp = median(lifeExp),
+    maxGdpPercap = max(gdpPercap)
+  )
+```
+
+
+15. 统计每年的人均寿命的中位数和人均GDP的最大值
+```{r}
+gapminder %>%
+  group_by(year) %>%
+  summarize(
+    medianLifeExp = median(lifeExp),
+    maxGdpPercap = max(gdpPercap)
+  )
+```
+
+16. 统计每年人均寿命、人口数量以及人均GDP的均值
+```{r}
+gapminder %>%
+  group_by(year) %>%
+  summarize(
+    across(c(lifeExp, pop, gdpPercap), mean)
+  )
+
+# or
+gapminder %>%
+  group_by(year) %>%
+  summarize(
+    across(where(is.numeric), mean)
+  )
+```
+
+17. 数据集中包含了哪些国家？
+```{r}
+gapminder %>%
+  count(country)
+
+# or
+gapminder %>%
+  distinct(country)
+```
+
+
+
+18. 数据集中每个洲包含多少个国家？
+
+```{r}
+gapminder %>%
+  group_by(continent) %>%
+  summarize(
+    n_countries = n_distinct(country)
+  )
+```
+
+
+
+
+
+
+
+
+
+

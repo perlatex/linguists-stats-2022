@@ -1,0 +1,61 @@
+---
+title: "重复一张图"
+author: "王小二"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    theme: flatly
+    highlight: pygments
+    code_download: true
+    toc: true
+    toc_float: true
+    number_sections: true
+    df_print: paged
+---
+
+
+# 引言
+
+今天看到一张图，觉得很不错，简单清晰。
+
+```{r, out.width = '90%', echo = FALSE}
+knitr::include_graphics(path = "images/migration.png")
+```
+
+
+数据是公开的，因此不难找到，我是在[这里](https://www.cato.org/blog/where-did-24-million-48-million-missing-immigrants-go)图中获取。
+
+**先观察这张图想表达的意思：**
+
+- 蓝色的是历年移民人口真实数据
+
+- 依据前6个点（2011年到2016年）建立线性模型，并依此预测后5个点（2016到2021年）的情况，从而得到黄色的直线
+
+- 预测情况与实际情况的差，得到缺口总数210万
+
+
+
+# 开始
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(modelr)
+
+df <- tibble::tribble(
+  ~year,   ~num,
+  2011,  795300,
+  2012,  858740,
+  2013,  849730,
+  2014,  945640,
+  2015, 1060000,
+  2016, 1065000,
+  2017,  948390,
+  2018,  719870,
+  2019,  568540,
+  2020,  477030
+) %>%
+  mutate(num = num / 1000000)
+
+df
+```
+

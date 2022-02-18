@@ -1,0 +1,94 @@
+---
+title: "元音舌位图"
+author: "王小二"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    theme: flatly
+    highlight: pygments
+    code_download: true
+    toc: true
+    toc_float: true
+    number_sections: true
+    df_print: paged
+---
+
+
+
+
+
+# 读取数据
+
+```{r message = FALSE, warning = FALSE}
+library(tidyverse)
+library(readxl)
+
+d <- read_excel("data/vowel_data.xlsx")
+d %>% head(5)
+```
+
+# 作业
+
+1. 以F2为横坐标和F1为纵坐标画出散点图，不同的元音用不同的颜色
+
+```{r}
+d %>%
+  ggplot(aes(x = F2, y = F1, color = vowel)) +
+  geom_point()
+```
+
+
+2. 按元音分组，统计F1和F2的均值，然后画出F2和F1均值的散点图，不同的元音用不同的颜色
+
+```{r}
+m <- d %>%
+  group_by(vowel) %>%
+  summarise(
+    mean_f1 = mean(F1),
+    mean_f2 = mean(F2)
+  )
+
+m %>%
+  ggplot(aes(x = mean_f2, y = mean_f1, color = vowel)) +
+  geom_point(size = 5)
+```
+
+
+3. 在上图每个点的位置加上元音标签（提示`geom_text(aes(label = vowel))`）
+
+```{r}
+m %>%
+  ggplot(aes(x = mean_f2, y = mean_f1, color = vowel)) +
+  geom_point() +
+  geom_text(aes(label = vowel), size = 5)
+```
+
+
+4. 思考把两张图画在一张图上
+
+```{r}
+d %>%
+  ggplot(aes(x = F2, y = F1, color = vowel)) +
+  geom_point() +
+  geom_text(
+    data = m,
+    aes(x = mean_f2, y = mean_f1, label = vowel),
+    size = 5
+  )
+```
+
+
+5. 给上图增加等高线
+(提示 `stat_ellipse(aes(fill = vowel), level = 0.8, geom = "polygon", alpha = 0.1)` )
+
+```{r}
+d %>%
+  ggplot(aes(x = F2, y = F1, color = vowel)) +
+  geom_point() +
+  geom_label(
+    data = m,
+    aes(x = mean_f2, y = mean_f1, label = vowel),
+    size = 5
+  ) +
+  stat_ellipse(aes(fill = vowel), level = 0.8, geom = "polygon", alpha = 0.1)
+```
