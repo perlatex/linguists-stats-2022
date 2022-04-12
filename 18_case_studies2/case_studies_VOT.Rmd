@@ -157,7 +157,35 @@ df %>%
 ```
 
 
+- 画出不同性别的被试在读单词"can"时候的语速分布图，并在图中用红点标出其均值
 
+```{r}
+m <- df %>%
+  filter(word == "can") %>% 
+  group_by(gender) %>%
+  summarise(
+    mean = mean(speaking_rate)
+  )
+
+df %>%
+  filter(word == "can") %>% 
+  ggplot(aes(x = gender, y = speaking_rate)) +
+  geom_jitter(alpha = 0.2) +
+  geom_point(data = m, aes(y = mean), color = "red", size = 5)
+```
+
+
+- 上图中的分布图用小蜜蜂图，提示(`ggbeeswarm::geom_quasirandom`)
+
+```{r}
+library(ggbeeswarm)
+df %>%
+  filter(word == "can") %>% 
+  ggplot(aes(x = gender, y = speaking_rate)) +
+  geom_jitter(alpha = 0.2) +
+  geom_quasirandom(dodge.width = 1) + 
+  geom_point(data = m, aes(y = mean), color = "red", size = 5)
+```
 
 - 自己提出一个问题，用可视化方法探索，并尝试给出解释。
 
